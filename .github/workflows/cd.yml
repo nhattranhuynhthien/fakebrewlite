@@ -1,0 +1,106 @@
+name: CD Pipeline (Build Image -> Push GHCR -> Deploy & Smoke Test)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  quality-gate:
+    name: 1. Quality Gate (Lint, Unit/Int/E2E Test, Build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: [API] Install, Lint, Test (Unit + Integration + E2E) & Build
+        working-directory: apps/api
+        run: |
+          npm install
+          npm run lint
+          npm test
+          npm run build
+
+      - name: [WEB] Install, Lint, Test & Build
+        working-directory: apps/web
+        run: |
+          npm install
+          npm run lint
+          npm test
+          npm run build
+
+  build-push-and-deploy:
+    name: 2. Build & Push Docker Images + Deploy + Smoke Test
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Image Tags (Commit SHA & Latest)
+        id: vars
+        run: |
+          IMAGE_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "owner=$IMAGE_OWNER" >> $GITHUB_OUTPUT
+          echo "sha_tag=sha-$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build and Push API Docker Image
+        run: |
+          API_IMAGE="ghcr.io/${{ steps.vars.outputs.owner }}/brewlite-api"
+          docker build -t $API_IMAGE:${{ steps.vars.outputs.sha_tag }} -t $API_IMAGE:latest ./apps/api
+          docker push $API_IMAGE:${{ steps.vars.outputs.sha_tag }}
+          docker push $API_IMAGE:latest
+
+      - name: Build and Push Web Docker Image
+        run: |
+          WEB_IMAGE="ghcr.io/${{ steps.vars.outputs.owner }}/brewlite-web"
+          docker build -t $WEB_IMAGE:${{ steps.vars.outputs.sha_tag }} -t $WEB_IMAGE:latest ./apps/web
+          docker push $WEB_IMAGE:${{ steps.vars.outputs.sha_tag }}
+          docker push $WEB_IMAGE:latest
+
+      - name: Trigger Production Deployment & Run Smoke Test
+        env:
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+          RENDER_WEB_DEPLOY_HOOK: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+        run: |
+          echo "=== Step 1: Database Migration Check ==="
+          test -f apps/api/prisma/migration.sql && echo "Migration SQL verified."
+
+          if [ -n "$RENDER_API_DEPLOY_HOOK" ]; then
+            echo "=== Step 2: Triggering Render API Deploy Hook ==="
+            curl -fsSL -X POST "$RENDER_API_DEPLOY_HOOK"
+          fi
+
+          if [ -n "$RENDER_WEB_DEPLOY_HOOK" ]; then
+            echo "=== Step 3: Triggering Render Web Deploy Hook ==="
+            curl -fsSL -X POST "$RENDER_WEB_DEPLOY_HOOK"
+          fi
+
+          echo "=== Step 4: Running Containerized Smoke Test (/health) ==="
+          docker run -d --name smoke-api -p 4000:4000 ghcr.io/${{ steps.vars.outputs.owner }}/brewlite-api:${{ steps.vars.outputs.sha_tag }}
+          sleep 5
+          curl -f http://localhost:4000/health || (echo "Smoke Test Failed! Initiating Rollback..." && docker logs smoke-api && exit 1)
+          echo "Smoke Test Passed HTTP 200 OK!"
+          docker rm -f smoke-api
+

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: brewlite-api
+    name: brewlite-api-ap0d
     env: docker
     rootDir: apps/api
     dockerfilePath: Dockerfile
@@ -14,11 +14,11 @@ services:
         value: SUCCESS
 
   - type: web
-    name: brewlite-web
+    name: brewlite-web-nt76
     env: docker
     rootDir: apps/web
     dockerfilePath: Dockerfile
     plan: free
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://brewlite-api.onrender.com
+        value: https://brewlite-api-ap0d.onrender.com
