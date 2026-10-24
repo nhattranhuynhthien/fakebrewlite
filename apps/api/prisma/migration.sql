@@ -1,0 +1,41 @@
+-- Create Tables for BrewLite PostgreSQL Database
+CREATE TABLE IF NOT EXISTS users (
+  id VARCHAR(64) PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(32) DEFAULT 'CUSTOMER',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS products (
+  id VARCHAR(64) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  base_price INTEGER NOT NULL,
+  image_url TEXT NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  available_sizes JSONB NOT NULL,
+  available_toppings JSONB NOT NULL,
+  stock INTEGER NOT NULL,
+  is_available BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+  id VARCHAR(64) PRIMARY KEY,
+  user_id VARCHAR(64) NOT NULL REFERENCES users(id),
+  status VARCHAR(32) NOT NULL,
+  total_amount INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id VARCHAR(64) PRIMARY KEY,
+  order_id VARCHAR(64) NOT NULL REFERENCES orders(id),
+  idempotency_key VARCHAR(128) UNIQUE NOT NULL,
+  amount INTEGER NOT NULL,
+  method VARCHAR(32) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  external_tx_id VARCHAR(128),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
