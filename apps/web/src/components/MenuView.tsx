@@ -376,13 +376,25 @@ export default function MenuView() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#e2e8f0',
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-        color: '#1e293b',
-        paddingBottom: 85,
+        display: 'flex',
+        justifyContent: 'center',
       }}
     >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 480,
+          minHeight: '100vh',
+          backgroundColor: '#f8fafc',
+          color: '#1e293b',
+          boxShadow: '0 0 40px rgba(0,0,0,0.1)',
+          position: 'relative',
+          paddingBottom: 85,
+        }}
+      >
       {/* TOAST NOTIFICATION FLOATING */}
       {toastMessage && (
         <div
@@ -1746,18 +1758,18 @@ export default function MenuView() {
           style={{
             position: 'fixed',
             bottom: 0,
-            left: 0,
-            right: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            maxWidth: 480,
             backgroundColor: '#fff',
             borderTop: '1px solid #e2e8f0',
-            boxShadow: '0 -2px 10px rgba(0,0,0,0.04)',
+            boxShadow: '0 -4px 16px rgba(0,0,0,0.06)',
             zIndex: 90,
           }}
         >
           <div
             style={{
-              maxWidth: 480,
-              margin: '0 auto',
               display: 'flex',
               justifyContent: 'space-around',
               padding: '6px 0',
@@ -1819,6 +1831,7 @@ export default function MenuView() {
           </div>
         </nav>
       )}
+      </div>
     </div>
   );
 }
