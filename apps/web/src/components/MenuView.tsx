@@ -108,7 +108,18 @@ export default function MenuView() {
   const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null);
   const [orders, setOrders] = useState<OrderRecord[]>([]);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  const resolveApiUrl = (): string => {
+    const raw = process.env.NEXT_PUBLIC_API_URL || '';
+    if (
+      raw === 'https://brewlite-api.onrender.com' ||
+      (!raw && typeof window !== 'undefined' && window.location.hostname.includes('onrender.com'))
+    ) {
+      return 'https://brewlite-api-ap0d.onrender.com';
+    }
+    return raw || 'http://localhost:4000';
+  };
+
+  const apiUrl = resolveApiUrl();
 
   const fetchMenu = async () => {
     setIsLoading(true);
