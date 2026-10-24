@@ -4,7 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+RUN rm -rf dist *.tsbuildinfo
 RUN npm run build
+RUN ls -la dist && test -f dist/main.js
 
 # Stage 2: Production Runner
 FROM node:20-alpine AS runner
