@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: brewlite-api
+    env: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        value: brewlite_production_secret_key_change_me
+      - key: PAYMENT_SIMULATION_MODE
+        value: SUCCESS
+
+  - type: web
+    name: brewlite-web
+    env: docker
+    dockerfilePath: ./apps/web/Dockerfile
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://brewlite-api.onrender.com
