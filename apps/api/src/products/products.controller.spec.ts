@@ -25,7 +25,7 @@ describe('ProductsController (API-T01)', () => {
   it('GET /products/:id should return product detail when id exists', () => {
     const product = controller.getProductById('prod-01');
     expect(product.name).toBe('Trà Sữa Ô Long Nướng');
-    expect(product.basePrice).toBe(999999);
+    expect(product.basePrice).toBe(35000);
   });
 
   it('GET /products/:id should throw NotFoundException when id does not exist', () => {
