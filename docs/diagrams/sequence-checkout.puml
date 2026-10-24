@@ -1,0 +1,86 @@
+@startuml
+autonumber
+title Sequence Diagram - UC-01: Đặt và Thanh toán Đơn hàng (Checkout)
+
+actor "Customer" as Customer
+participant "Next.js UI" as UI
+participant "NestJS API" as API
+database "Database\n(PostgreSQL)" as DB
+participant "Payment Service\n(Simulated)" as Payment
+
+Customer -> UI : Chọn phương thức thanh toán & Bấm "Thanh toán"
+activate UI
+
+UI -> UI : Validate dữ liệu phía Client &\nSinh mã Idempotency-Key (UUID)
+UI -> API : POST /orders/checkout\nHeaders: { Authorization: Bearer <JWT>, Idempotency-Key }\nBody: { items, paymentMethod, promoCode }
+activate API
+
+API -> API : Kiểm tra chữ ký JWT &\nValidate dữ liệu đầu vào (DTO)
+
+alt JWT không hợp lệ hoặc dữ liệu sai
+    API --> UI : 401 Unauthorized / 400 Bad Request
+    UI --> Customer : Hiển thị thông báo lỗi / Yêu cầu đăng nhập lại
+else JWT và dữ liệu hợp lệ
+    API -> DB : SELECT * FROM payments WHERE idempotency_key = :key
+    activate DB
+    DB --> API : Kết quả kiểm tra Idempotency-Key
+    deactivate DB
+
+    alt Idempotency-Key đã tồn tại (Client gửi lặp lại request)
+        API --> UI : 200 OK (Trả về kết quả giao dịch trước đó, không xử lý lại)
+        UI --> Customer : Hiển thị trạng thái đơn hàng hiện tại
+    else Idempotency-Key mới (Xử lý lần đầu)
+        API -> DB : BEGIN TRANSACTION
+        activate DB
+        API -> DB : SELECT stock FROM products WHERE id IN (:itemIds) FOR UPDATE
+        DB --> API : Trả về số lượng tồn kho hiện tại
+
+        alt Có sản phẩm hết hàng (stock < quantity)
+            API -> DB : ROLLBACK TRANSACTION
+            deactivate DB
+            API --> UI : 409 Conflict (Thông báo sản phẩm hết hàng)
+            UI --> Customer : Thông báo hết hàng & Yêu cầu cập nhật giỏ hàng
+        else Đủ số lượng tồn kho
+            API -> DB : UPDATE products SET stock = stock - :qty
+            API -> DB : INSERT INTO orders (status = 'PENDING', ...)
+            API -> DB : INSERT INTO order_items (...)
+            API -> DB : INSERT INTO payments (status = 'PROCESSING', idempotency_key = :key)
+            API -> DB : COMMIT TRANSACTION
+            deactivate DB
+
+            API -> Payment : POST /pay (amount, orderId, idempotencyKey)
+            activate Payment
+            Payment --> API : Kết quả xử lý giao dịch
+            deactivate Payment
+
+            alt Thanh toán thành công (Payment Approved)
+                API -> DB : BEGIN TRANSACTION
+                activate DB
+                API -> DB : UPDATE payments SET status = 'SUCCESS', transaction_id = :txId
+                API -> DB : UPDATE orders SET status = 'PAID'
+                API -> DB : INSERT INTO loyalty_transactions (points_earned, ...)
+                API -> DB : COMMIT TRANSACTION
+                deactivate DB
+
+                API --> UI : 201 Created (orderId, status: 'PAID', paymentStatus: 'SUCCESS')
+                UI -> UI : Xóa giỏ hàng (Clear Cart)
+                UI --> Customer : Hiển thị xác nhận đơn hàng & Chuyển sang trang Theo dõi đơn
+            else Thanh toán thất bại (Payment Declined / Timeout)
+                API -> DB : BEGIN TRANSACTION
+                activate DB
+                API -> DB : UPDATE payments SET status = 'FAILED'
+                API -> DB : UPDATE orders SET status = 'PAYMENT_FAILED'
+                API -> DB : UPDATE products SET stock = stock + :qty (Hoàn lại tồn kho)
+                API -> DB : COMMIT TRANSACTION
+                deactivate DB
+
+                API --> UI : 402 Payment Required (status: 'PAYMENT_FAILED', message)
+                UI --> Customer : Thông báo thanh toán thất bại & Cho phép thử lại
+            end
+        end
+    end
+end
+
+deactivate API
+deactivate UI
+@enduml

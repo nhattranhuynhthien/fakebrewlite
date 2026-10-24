@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+actor "Khách hàng\n(Customer)" as Customer
+actor "Dịch vụ Thanh toán\n(Payment Service)" as PaymentService
+
+rectangle "Phạm vi: Đặt và Thanh toán đơn hàng" {
+  usecase "UC-01: Đặt và thanh toán\nđơn hàng" as UC_Main
+  usecase "Kiểm tra xác thực JWT" as UC_Auth
+  usecase "Kiểm tra & giữ chỗ tồn kho" as UC_Stock
+  usecase "Xử lý giao dịch qua Ví/Thẻ\n(Idempotent)" as UC_Pay
+  usecase "Áp dụng mã khuyến mãi" as UC_Promo
+}
+
+Customer --> UC_Main
+UC_Main ..> UC_Auth : <<include>>
+UC_Main ..> UC_Stock : <<include>>
+UC_Main ..> UC_Pay : <<include>>
+UC_Promo ..> UC_Main : <<extend>>
+
+UC_Pay --> PaymentService
+@enduml

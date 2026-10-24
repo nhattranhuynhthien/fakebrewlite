@@ -1,0 +1,58 @@
+@startuml
+title Activity Diagram - Luồng Đặt và Thanh toán Đồ uống (End-to-End)
+
+|Khách hàng (Customer)|
+start
+:Truy cập ứng dụng & Xem Menu;
+:Chọn đồ uống, tùy chỉnh Size & Topping;
+:Thêm sản phẩm vào Giỏ hàng;
+:Xem Giỏ hàng & Bấm "Đặt đơn";
+
+|Hệ thống BrewLite (Next.js / NestJS)|
+if (Đã đăng nhập (Có JWT hợp lệ)?) then (Chưa đăng nhập)
+  |Khách hàng (Customer)|
+  :Thực hiện Đăng nhập / Đăng ký;
+  |Hệ thống BrewLite (Next.js / NestJS)|
+  :Xác thực và cấp JWT Token;
+else (Đã đăng nhập)
+endif
+
+:Kiểm tra dữ liệu giỏ hàng & Tồn kho;
+
+if (Sản phẩm còn đủ tồn kho?) then (Hết hàng)
+  :Thông báo lỗi "Sản phẩm đã hết hàng";
+  |Khách hàng (Customer)|
+  :Cập nhật lại Giỏ hàng (Xóa/Đổi món);
+  stop
+else (Còn hàng)
+  |Hệ thống BrewLite (Next.js / NestJS)|
+  :Khởi tạo đơn hàng (Trạng thái PENDING)\nvà giữ chỗ tồn kho (Database Transaction);
+endif
+
+|Khách hàng (Customer)|
+:Chọn phương thức thanh toán (Ví/Thẻ)\nvà bấm "Thanh toán";
+
+|Hệ thống BrewLite (Next.js / NestJS)|
+:Kiểm tra Idempotency-Key & Gửi yêu cầu thanh toán;
+
+|Dịch vụ Thanh toán (Payment Service)|
+:Xử lý giao dịch thanh toán mô phỏng;
+
+|Hệ thống BrewLite (Next.js / NestJS)|
+if (Kết quả thanh toán?) then (Thất bại)
+  :Cập nhật trạng thái PAYMENT_FAILED\n& Hoàn lại tồn kho;
+  :Hiển thị thông báo "Thanh toán thất bại";
+  |Khách hàng (Customer)|
+  :Nhận thông báo lỗi (Có thể thử thanh toán lại);
+  stop
+else (Thành công)
+  |Hệ thống BrewLite (Next.js / NestJS)|
+  :Cập nhật đơn hàng thành PAID\n& Xác nhận trừ tồn kho;
+  :Làm sạch giỏ hàng & Gửi thông báo xác nhận;
+endif
+
+|Khách hàng (Customer)|
+:Xem xác nhận đơn hàng & Theo dõi trạng thái đơn\n(PAID -> PREPARING -> COMPLETED);
+stop
+
+@enduml

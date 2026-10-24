@@ -1,0 +1,57 @@
+@startuml
+left to right direction
+actor "Khách hàng" as Customer
+actor "Nhân viên quầy" as Staff
+actor "Hệ thống thanh toán" as PaymentService
+
+package "Hệ thống BrewLite (MVP)" {
+  usecase "Xem Menu & Sản phẩm" as UC1
+  usecase "Quản lý Giỏ hàng" as UC2
+  usecase "Đăng ký / Đăng nhập" as UC3
+  usecase "Đặt đơn hàng" as UC4
+  usecase "Thanh toán đơn hàng" as UC5
+  usecase "Xem lịch sử & Theo dõi đơn" as UC6
+  usecase "Cập nhật trạng thái đơn" as UC7
+}
+
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+Customer --> UC5
+Customer --> UC6
+
+UC4 ..> UC3 : <<include>>
+UC4 --> PaymentService
+UC5 --> PaymentService
+
+Staff --> UC7
+@enduml@startuml
+left to right direction
+actor "Khách hàng" as Customer
+actor "Nhân viên quầy" as Staff
+actor "Hệ thống thanh toán" as PaymentService
+
+package "Hệ thống BrewLite (MVP)" {
+  usecase "Xem Menu & Sản phẩm" as UC1
+  usecase "Quản lý Giỏ hàng" as UC2
+  usecase "Đăng ký / Đăng nhập" as UC3
+  usecase "Đặt đơn hàng" as UC4
+  usecase "Thanh toán đơn hàng" as UC5
+  usecase "Xem lịch sử & Theo dõi đơn" as UC6
+  usecase "Cập nhật trạng thái đơn" as UC7
+}
+
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+Customer --> UC5
+Customer --> UC6
+
+UC4 ..> UC3 : <<include>>
+UC4 --> PaymentService
+UC5 --> PaymentService
+
+Staff --> UC7
+@enduml

@@ -1,0 +1,139 @@
+@startuml
+skinparam classAttributeIconSize 0
+title Class Diagram - Mô hình miền (Domain Model) hệ thống BrewLite
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  MANAGER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PREPARING
+  COMPLETED
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  WALLET
+  CARD
+}
+
+enum LoyaltyTxType {
+  EARN
+  REDEEM
+}
+
+class User {
+  +id: UUID
+  +email: String
+  +passwordHash: String
+  +fullName: String
+  +phone: String
+  +role: UserRole
+  +loyaltyPoints: Int
+  +createdAt: DateTime
+  +updatedAt: DateTime
+}
+
+class Product {
+  +id: UUID
+  +name: String
+  +description: String
+  +basePrice: Decimal
+  +imageUrl: String
+  +category: String
+  +availableSizes: JSON
+  +availableToppings: JSON
+  +stock: Int
+  +isAvailable: Boolean
+  +createdAt: DateTime
+}
+
+class Order {
+  +id: UUID
+  +userId: UUID
+  +promotionId: UUID?
+  +status: OrderStatus
+  +subtotalAmount: Decimal
+  +discountAmount: Decimal
+  +totalAmount: Decimal
+  +note: String?
+  +createdAt: DateTime
+  +updatedAt: DateTime
+  +calculateTotal(): Decimal
+}
+
+class OrderItem {
+  +id: UUID
+  +orderId: UUID
+  +productId: UUID
+  +quantity: Int
+  +selectedSize: String
+  +selectedToppings: JSON
+  +unitPrice: Decimal
+  +totalPrice: Decimal
+}
+
+class Payment {
+  +id: UUID
+  +orderId: UUID
+  +idempotencyKey: String
+  +amount: Decimal
+  +method: PaymentMethod
+  +status: PaymentStatus
+  +externalTxId: String?
+  +paidAt: DateTime?
+  +createdAt: DateTime
+}
+
+class Promotion {
+  +id: UUID
+  +code: String
+  +description: String
+  +discountPercent: Decimal
+  +maxDiscountAmount: Decimal
+  +minOrderAmount: Decimal
+  +startDate: DateTime
+  +endDate: DateTime
+  +isActive: Boolean
+  +isValid(orderSubtotal: Decimal): Boolean
+}
+
+class LoyaltyTransaction {
+  +id: UUID
+  +userId: UUID
+  +orderId: UUID
+  +points: Int
+  +type: LoyaltyTxType
+  +createdAt: DateTime
+}
+
+' Relationships & Multiplicities
+User "1" --> "0..*" Order : places >
+User "1" --> "0..*" LoyaltyTransaction : has >
+
+Order "1" *-- "1..*" OrderItem : contains >
+Order "0..*" --> "0..1" Promotion : applies >
+Order "1" -- "0..*" Payment : paid via >
+Order "1" -- "0..1" LoyaltyTransaction : generates >
+
+Product "1" <-- "0..*" OrderItem : references <
+
+User ..> UserRole
+Order ..> OrderStatus
+Payment ..> PaymentStatus
+Payment ..> PaymentMethod
+LoyaltyTransaction ..> LoyaltyTxType
+
+@enduml
