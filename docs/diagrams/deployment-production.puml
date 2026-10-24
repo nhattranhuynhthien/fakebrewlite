@@ -1,0 +1,97 @@
+@startuml
+title UML Deployment Diagram - Kiến trúc Triển khai Hệ thống BrewLite (Local, CI/CD & Production)
+skinparam componentStyle uml2
+left to right direction
+
+' 1. THIẾT BỊ NGƯỜI DÙNG
+node "Thiết bị Người dùng\n(Mobile / Desktop Device)" as UserDevice {
+  artifact "Mobile Browser / PWA\n(Service Worker & Manifest)" as PWA
+}
+
+' 2. MÔI TRƯỜNG LOCAL
+package "Ranh giới 1: Môi trường Phát triển (Local Environment)" as LocalBoundary {
+  node "Developer Machine\n(Docker Compose)" as LocalHost {
+    component "web-container\nNext.js (:3000)" as LocalWeb
+    component "api-container\nNestJS (:4000)" as LocalApi
+    database "db-container\nPostgreSQL (:5432)\n[local-pgdata volume]" as LocalDB
+    artifact ".env (Local Config)" as LocalEnv
+
+    LocalWeb --> LocalApi : HTTP (localhost:4000)
+    LocalApi --> LocalDB : TCP :5432
+    LocalApi ..> LocalEnv : reads
+  }
+}
+
+' 3. MÔI TRƯỜNG CI/CD & CONTAINER REGISTRY
+package "Ranh giới 2: Môi trường CI/CD & Registry (GitHub)" as CIBoundary {
+  node "GitHub Repository\n(Monorepo)" as GitRepo {
+    artifact "apps/web & apps/api\ndocs/ & tests/" as SourceCode
+  }
+
+  node "GitHub Actions Runner\n(CI/CD Pipeline)" as GitHubActions {
+    component "Quality Gate\n(Lint -> Unit/Int/E2E Test -> Build)" as QualityGate
+    component "Docker Builder & Deployer\n(Build Image -> Push -> Trigger Deploy -> Smoke Test)" as Deployer
+    artifact "CI Secrets\n(RENDER_API_KEY, REGISTRY_TOKEN)" as CISecrets
+  }
+
+  node "GitHub Container Registry\n(ghcr.io)" as GHCR {
+    artifact "brewlite-web:<sha/semver>" as WebImage
+    artifact "brewlite-api:<sha/semver>" as ApiImage
+  }
+
+  GitRepo --> QualityGate : PR / Push / Tag
+  QualityGate --> Deployer : Pass Gate
+  Deployer ..> CISecrets : uses
+  Deployer --> WebImage : Push Image (HTTPS :443)
+  Deployer --> ApiImage : Push Image (HTTPS :443)
+}
+
+' 4. MÔI TRƯỜNG PRODUCTION
+package "Ranh giới 3: Môi trường Production (Render Cloud Platform)" as ProdBoundary {
+  cloud "Cloudflare / Render Edge CDN\n(SSL/TLS Termination)" as CDN
+
+  node "Public Web Tier" as WebTier {
+    node "Docker Container: brewlite-web\n(Next.js SSR / Static PWA)" as ProdWeb {
+      component "Next.js Server\n(Port :3000)" as NextServer
+      artifact "Env: NEXT_PUBLIC_API_URL" as WebEnv
+    }
+  }
+
+  node "Application API Tier" as ApiTier {
+    node "Docker Container: brewlite-api\n(NestJS Modular Backend)" as ProdApi {
+      component "NestJS API Server\n(Port :4000)" as NestServer
+      component "Simulated Payment Adapter\n(In-process Mock Service)" as PaymentMock
+      component "Health & Logger\n(GET /health, Stdout Logs)" as HealthAndLog
+      artifact "Secrets / Env Vars\n(DATABASE_URL, JWT_SECRET)" as ApiSecrets
+    }
+  }
+
+  node "Private Data Tier (No Public Ingress)" as DataTier {
+    database "Managed PostgreSQL 16\n(Port :5432 - Private Network Only)" as ProdDB {
+      folder "Persistent Disk Volume\n(/var/lib/postgresql/data)" as PersistentVolume
+    }
+  }
+
+  node "Platform Monitoring & Logs" as Monitoring {
+    component "Render Log Stream &\nHealth Check Probe" as LogCollector
+  }
+}
+
+' KẾT NỐI GIỮA CÁC THÀNH PHẦN
+PWA --> CDN : HTTPS (:443)
+CDN --> NextServer : HTTPS / HTTP (:3000)
+PWA --> NestServer : HTTPS (:443 -> :4000)\nREST API (JWT, Idempotency-Key)
+NextServer --> NestServer : HTTPS (:443 -> :4000)\nSSR Data Fetching
+
+NestServer --> PaymentMock : Internal Call
+NestServer --> ProdDB : Internal TCP (:5432)\n(Prisma ORM + Migration)
+NestServer ..> ApiSecrets : reads
+NextServer ..> WebEnv : reads
+
+GHCR ..> ProdWeb : Pull Image (HTTPS)
+GHCR ..> ProdApi : Pull Image (HTTPS)
+Deployer --> NestServer : Smoke Test (GET /health)\nHTTPS (:443)
+
+LogCollector --> HealthAndLog : Poll GET /health (:4000)\n& Collect Logs
+
+@enduml
