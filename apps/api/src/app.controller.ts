@@ -10,233 +10,347 @@ export class AppController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BrewLite API – Backend Server Portal</title>
+  <title>BrewLite API – Developer Platform & Live Console</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
+      --bg: #0b0f19;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(56, 189, 248, 0.15);
+      --card-hover: rgba(56, 189, 248, 0.25);
+      --text: #f1f5f9;
       --text-muted: #94a3b8;
       --primary: #38bdf8;
-      --primary-hover: #0ea5e9;
-      --accent: #10b981;
-      --coffee: #d97706;
-      --border: #334155;
+      --primary-glow: rgba(56, 189, 248, 0.35);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --warning: #f59e0b;
+      --code-bg: #060911;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(217, 119, 6, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
       color: var(--text);
       line-height: 1.5;
-      padding: 24px 16px;
+      padding: 32px 16px;
+      min-height: 100vh;
     }
     .container {
-      max-width: 900px;
+      max-width: 1020px;
       margin: 0 auto;
     }
-    .header {
+
+    /* TOP BAR */
+    .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 28px;
       flex-wrap: wrap;
       gap: 16px;
     }
-    .brand {
+    .brand-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
-    .brand-icon {
-      font-size: 32px;
-      background: rgba(217, 119, 6, 0.2);
-      border: 1px solid rgba(217, 119, 6, 0.4);
+    .brand-logo {
       width: 52px;
       height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px;
+      font-size: 26px;
+      box-shadow: 0 4px 20px rgba(217, 119, 6, 0.4);
     }
     .brand-title {
       font-size: 22px;
-      font-weight: 700;
-      color: #fff;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .brand-desc {
-      font-size: 13px;
+    .brand-sub {
+      font-size: 12px;
       color: var(--text-muted);
     }
-    .status-badge {
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .live-status {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 6px 14px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #34d399;
       border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
     }
-    .status-dot {
+    .live-dot {
       width: 8px;
       height: 8px;
-      background-color: #10b981;
+      background: #10b981;
       border-radius: 50%;
       box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
     }
-    .cta-banner {
-      background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 100%);
-      padding: 20px;
-      border-radius: 16px;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* HERO QUICK ACTION BANNER */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(14, 116, 144, 0.5) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
       flex-wrap: wrap;
-      gap: 16px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      gap: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-    .cta-text h2 {
+    .hero-info h2 {
       font-size: 18px;
+      font-weight: 700;
+      color: #fff;
       margin-bottom: 4px;
     }
-    .cta-text p {
+    .hero-info p {
       font-size: 13px;
-      opacity: 0.9;
+      color: #cbd5e1;
     }
-    .btn-web {
-      background: #fff;
-      color: #0284c7;
+    .hero-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-portal {
       text-decoration: none;
+      font-size: 13px;
       font-weight: 700;
-      font-size: 14px;
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 10px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: transform 0.2s;
+      transition: all 0.2s ease;
     }
-    .btn-web:hover { transform: translateY(-2px); }
-    .metrics-grid {
+    .btn-portal-client {
+      background: #fff;
+      color: #0369a1;
+      box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
+    }
+    .btn-portal-client:hover { transform: translateY(-2px); }
+    .btn-portal-pos {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .btn-portal-pos:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+    /* SYSTEM METRICS GRID */
+    .metrics-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 16px;
       margin-bottom: 28px;
     }
     .metric-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px 18px;
+      backdrop-filter: blur(8px);
     }
-    .metric-label {
-      font-size: 12px;
+    .metric-tag {
+      font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      font-weight: 600;
+      letter-spacing: 0.5px;
       margin-bottom: 6px;
     }
     .metric-val {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 800;
       color: #fff;
     }
+    .metric-extra {
+      font-size: 11px;
+      color: #38bdf8;
+      margin-top: 4px;
+    }
+
+    /* SECTION TITLE */
     .section-title {
-      font-size: 17px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
       margin-bottom: 14px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .endpoints-list {
+
+    /* INTERACTIVE ENDPOINTS LIST */
+    .endpoints-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 28px;
     }
-    .endpoint-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 18px;
+    .ep-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 14px;
+      transition: all 0.2s ease;
     }
-    .endpoint-info {
+    .ep-card:hover {
+      border-color: var(--card-hover);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .ep-meta {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
-    .method {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 8px;
+    .badge-method {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
       border-radius: 6px;
       letter-spacing: 0.5px;
+      min-width: 58px;
+      text-align: center;
     }
-    .method-get { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-    .method-post { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .method-patch { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .path {
-      font-family: monospace;
+    .get { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .post { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .patch { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .ep-path {
+      font-family: ui-monospace, Menlo, Monaco, monospace;
       font-size: 14px;
-      color: #f1f5f9;
-      font-weight: 600;
+      font-weight: 700;
+      color: #fff;
     }
-    .endpoint-desc {
+    .ep-desc {
       font-size: 12px;
       color: var(--text-muted);
+      margin-top: 2px;
     }
-    .btn-test {
+    .ep-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-action {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
-      padding: 6px 14px;
+      padding: 7px 14px;
       border-radius: 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
     }
-    .btn-test:hover { background: rgba(255, 255, 255, 0.18); }
-    .test-console {
-      background-color: #0b1120;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    .btn-run {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border: none;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.35);
+    }
+    .btn-run:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    }
+
+    /* LIVE PLAYGROUND CONSOLE */
+    .playground-box {
+      background: var(--code-bg);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      overflow: hidden;
       margin-bottom: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    .console-header {
+    .playground-header {
+      background: #111827;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 12px;
-      color: var(--text-muted);
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-    pre {
-      background: transparent;
-      color: #38bdf8;
+    .pg-title {
       font-family: monospace;
       font-size: 13px;
-      max-height: 250px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pg-status {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pg-body {
+      padding: 16px;
+    }
+    pre {
+      font-family: ui-monospace, Menlo, Monaco, monospace;
+      font-size: 13px;
+      color: #7dd3fc;
+      max-height: 280px;
       overflow: auto;
       white-space: pre-wrap;
+      line-height: 1.6;
     }
+
+    /* FOOTER */
     .footer {
       text-align: center;
       padding-top: 24px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       color: var(--text-muted);
       font-size: 12px;
     }
@@ -244,178 +358,241 @@ export class AppController {
 </head>
 <body>
   <div class="container">
-    <!-- HEADER -->
-    <header class="header">
-      <div class="brand">
-        <div class="brand-icon">☕</div>
+    <!-- TOP NAVIGATION & STATUS -->
+    <header class="topbar">
+      <div class="brand-group">
+        <div class="brand-logo">☕</div>
         <div>
-          <div class="brand-title">BrewLite API Server</div>
-          <div class="brand-desc">NestJS Modular Architecture • Assignment 2 (ĐH Sài Gòn)</div>
+          <h1 class="brand-title">BrewLite API Platform</h1>
+          <p class="brand-sub">Production RESTful Engine • NestJS 10 • Dockerized</p>
         </div>
       </div>
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        API Online & Operational
+
+      <div class="top-actions">
+        <div class="live-status">
+          <span class="live-dot"></span>
+          <span>100% OPERATIONAL</span>
+        </div>
+        <span style="font-size: 12px; color: var(--text-muted); font-family: monospace;" id="uptime-clock">
+          Uptime: Live
+        </span>
       </div>
     </header>
 
-    <!-- BANNER CHUYỂN SANG FRONTEND -->
-    <div class="cta-banner">
-      <div class="cta-text">
-        <h2>🌐 Trải nghiệm Giao diện Khách hàng & Quầy</h2>
-        <p>Ứng dụng Next.js Mobile-first / PWA kết nối trực tiếp với backend server này.</p>
+    <!-- CALL TO ACTION BANNER -->
+    <div class="hero-banner">
+      <div class="hero-info">
+        <h2>🚀 Cổng Truy Cập Hệ Thống Toàn Diện</h2>
+        <p>Hệ thống hỗ trợ cả trải nghiệm khách hàng và màn hình dành cho nhân viên pha chế.</p>
       </div>
-      <a href="https://brewlite-web-nt76.onrender.com" target="_blank" class="btn-web">
-        Mở Web App Client ➔
-      </a>
+      <div class="hero-links">
+        <a href="https://brewlite-web-nt76.onrender.com" target="_blank" class="btn-portal btn-portal-client">
+          📱 Ứng dụng Khách Hàng (PWA)
+        </a>
+        <a href="https://brewlite-web-nt76.onrender.com/pos" target="_blank" class="btn-portal btn-portal-pos">
+          🏪 Màn hình Quầy Barista (/pos)
+        </a>
+      </div>
     </div>
 
-    <!-- METRICS -->
-    <div class="metrics-grid">
+    <!-- SYSTEM METRICS OVERVIEW -->
+    <div class="section-title">📊 Trạng Thái Máy Chủ & Kiến Trúc</div>
+    <div class="metrics-row">
       <div class="metric-card">
-        <div class="metric-label">Framework Backend</div>
+        <div class="metric-tag">Backend Framework</div>
         <div class="metric-val">NestJS 10.3</div>
+        <div class="metric-extra">TypeScript • Modular Monolith</div>
       </div>
+
       <div class="metric-card">
-        <div class="metric-label">Runtime & Platform</div>
-        <div class="metric-val">Node.js 20 / Docker</div>
+        <div class="metric-tag">Database & ORM</div>
+        <div class="metric-val">PostgreSQL 16</div>
+        <div class="metric-extra">Prisma ORM • Migration Ready</div>
       </div>
+
       <div class="metric-card">
-        <div class="metric-label">Cơ sở dữ liệu</div>
-        <div class="metric-val">PostgreSQL / Prisma</div>
+        <div class="metric-tag">Bảo Mật & Auth</div>
+        <div class="metric-val">JWT Tokens</div>
+        <div class="metric-extra">HMAC-SHA256 • CORS Enabled</div>
       </div>
+
       <div class="metric-card">
-        <div class="metric-label">Mã hóa & Xác thực</div>
-        <div class="metric-val">JWT (HMAC-SHA256)</div>
+        <div class="metric-tag">Cơ Chế Đặt Hàng</div>
+        <div class="metric-val">Idempotency</div>
+        <div class="metric-extra">Database Transaction trừ kho</div>
       </div>
     </div>
 
-    <!-- DANH SÁCH ENDPOINTS -->
-    <div class="section-title">⚡ Danh sách REST Endpoints Trực tuyến</div>
-    <div class="endpoints-list">
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-get">GET</span>
+    <!-- LIVE REST API ENDPOINTS -->
+    <div class="section-title">⚡ Danh Sách REST Endpoints (Interactive Explorer)</div>
+    <div class="endpoints-container">
+      <!-- EP 1: HEALTH -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method get">GET</span>
           <div>
-            <div class="path">/health</div>
-            <div class="endpoint-desc">Kiểm tra trạng thái vận hành máy chủ (Health check)</div>
+            <div class="ep-path">/health</div>
+            <div class="ep-desc">Kiểm tra trạng thái vận hành máy chủ (Health Diagnostics)</div>
           </div>
         </div>
-        <button class="btn-test" onclick="runTest('/health')">Thử nghiệm ➔</button>
+        <div class="ep-actions">
+          <button class="btn-action btn-run" onclick="executeApi('/health')">▶ Chạy Test</button>
+        </div>
       </div>
 
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-get">GET</span>
+      <!-- EP 2: PRODUCTS -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method get">GET</span>
           <div>
-            <div class="path">/products</div>
-            <div class="endpoint-desc">Danh sách thực đơn kèm Size, Topping và số lượng tồn kho</div>
+            <div class="ep-path">/products</div>
+            <div class="ep-desc">Danh sách thực đơn kèm Size, Topping và số lượng tồn kho</div>
           </div>
         </div>
-        <button class="btn-test" onclick="runTest('/products')">Thử nghiệm ➔</button>
+        <div class="ep-actions">
+          <button class="btn-action btn-run" onclick="executeApi('/products')">▶ Chạy Test</button>
+        </div>
       </div>
 
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-get">GET</span>
+      <!-- EP 3: PRODUCT DETAIL -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method get">GET</span>
           <div>
-            <div class="path">/products/prod-01</div>
-            <div class="endpoint-desc">Xem chi tiết sản phẩm theo ID (Trà Sữa Ô Long Nướng)</div>
+            <div class="ep-path">/products/prod-01</div>
+            <div class="ep-desc">Chi tiết món theo ID (Trà Sữa Ô Long Nướng)</div>
           </div>
         </div>
-        <button class="btn-test" onclick="runTest('/products/prod-01')">Thử nghiệm ➔</button>
+        <div class="ep-actions">
+          <button class="btn-action btn-run" onclick="executeApi('/products/prod-01')">▶ Chạy Test</button>
+        </div>
       </div>
 
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-post">POST</span>
+      <!-- EP 4: LOGIN -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method post">POST</span>
           <div>
-            <div class="path">/auth/login</div>
-            <div class="endpoint-desc">Đăng nhập tài khoản và nhận Token JWT</div>
+            <div class="ep-path">/auth/login</div>
+            <div class="ep-desc">Đăng nhập tài khoản và cấp Access Token (JWT)</div>
           </div>
         </div>
-        <button class="btn-test" onclick="runLoginTest()">Thử nghiệm Login ➔</button>
+        <div class="ep-actions">
+          <button class="btn-action btn-run" onclick="executeLogin()">▶ Test Đăng Nhập</button>
+        </div>
       </div>
 
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-post">POST</span>
+      <!-- EP 5: ORDERS -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method post">POST</span>
           <div>
-            <div class="path">/orders/checkout</div>
-            <div class="endpoint-desc">Tạo đơn, trừ kho (Transaction) & Thanh toán (Idempotency)</div>
+            <div class="ep-path">/orders/checkout</div>
+            <div class="ep-desc">Đặt đơn hàng, trừ kho Transaction và thanh toán Idempotency</div>
           </div>
         </div>
-        <span class="endpoint-desc">Yêu cầu Bearer JWT</span>
+        <span style="font-size: 12px; color: var(--text-muted);">Yêu cầu Bearer Token</span>
       </div>
 
-      <div class="endpoint-card">
-        <div class="endpoint-info">
-          <span class="method method-patch">PATCH</span>
+      <!-- EP 6: STATUS -->
+      <div class="ep-card">
+        <div class="ep-meta">
+          <span class="badge-method patch">PATCH</span>
           <div>
-            <div class="path">/orders/:id/status</div>
-            <div class="endpoint-desc">Cập nhật trạng thái đơn (PAID -> PREPARING -> COMPLETED)</div>
+            <div class="ep-path">/orders/:id/status</div>
+            <div class="ep-desc">Quầy POS cập nhật trạng thái đơn (PAID -> PREPARING -> COMPLETED)</div>
           </div>
         </div>
-        <span class="endpoint-desc">Quầy / Barista API</span>
+        <span style="font-size: 12px; color: var(--text-muted);">Barista Action</span>
       </div>
     </div>
 
-    <!-- INTERACTIVE TEST CONSOLE -->
+    <!-- INTERACTIVE PLAYGROUND RESPONSE CONSOLE -->
     <div class="section-title">🖥️ Interactive Live API Console</div>
-    <div class="test-console">
-      <div class="console-header">
-        <span id="console-target">Endpoint: /health</span>
-        <span id="console-status">HTTP 200 OK</span>
+    <div class="playground-box">
+      <div class="playground-header">
+        <div class="pg-title">
+          <span>CONSOLE RESPONSE</span>
+          <span id="target-display" style="color: #fff;">GET /health</span>
+        </div>
+        <div class="pg-status" id="status-display">HTTP 200 OK</div>
       </div>
-      <pre id="console-output">// Bấm nút "Thử nghiệm ➔" ở danh sách trên để xem kết quả phản hồi JSON trực tiếp tại đây...</pre>
+      <div class="pg-body">
+        <pre id="output-display">// Bấm "▶ Chạy Test" tại bất kỳ Endpoint nào ở trên để xem phản hồi JSON tại đây...</pre>
+      </div>
     </div>
 
     <!-- FOOTER -->
     <footer class="footer">
-      BrewLite Coffee & Tea • Công nghệ Phần mềm Assignment 2 • Khoa CNTT – ĐH Sài Gòn (2026)
+      BrewLite Coffee & Tea • Assignment 2: Requirements to Deployment • Khoa CNTT – ĐH Sài Gòn (2026)
     </footer>
   </div>
 
   <script>
-    async function runTest(endpoint) {
-      document.getElementById('console-target').innerText = 'Endpoint: ' + endpoint;
-      document.getElementById('console-status').innerText = 'Đang gọi API...';
-      document.getElementById('console-output').innerText = 'Loading...';
+    async function executeApi(endpoint) {
+      const targetDisp = document.getElementById('target-display');
+      const statusDisp = document.getElementById('status-display');
+      const outputDisp = document.getElementById('output-display');
+
+      targetDisp.innerText = 'GET ' + endpoint;
+      statusDisp.innerText = 'Calling API...';
+      outputDisp.innerText = 'Loading live response...';
+
+      const t0 = performance.now();
       try {
         const res = await fetch(endpoint);
+        const t1 = performance.now();
+        const duration = Math.round(t1 - t0);
         const data = await res.json();
-        document.getElementById('console-status').innerText = 'HTTP ' + res.status + ' OK';
-        document.getElementById('console-output').innerText = JSON.stringify(data, null, 2);
+
+        statusDisp.innerText = 'HTTP ' + res.status + ' OK (' + duration + 'ms)';
+        statusDisp.style.color = '#34d399';
+        statusDisp.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        outputDisp.innerText = JSON.stringify(data, null, 2);
       } catch (err) {
-        document.getElementById('console-status').innerText = 'Lỗi kết nối';
-        document.getElementById('console-output').innerText = err.toString();
+        statusDisp.innerText = 'Network Error';
+        statusDisp.style.color = '#f87171';
+        outputDisp.innerText = err.toString();
       }
     }
 
-    async function runLoginTest() {
-      document.getElementById('console-target').innerText = 'Endpoint: POST /auth/login';
-      document.getElementById('console-status').innerText = 'Đang gửi payload login...';
-      document.getElementById('console-output').innerText = 'Loading...';
+    async function executeLogin() {
+      const targetDisp = document.getElementById('target-display');
+      const statusDisp = document.getElementById('status-display');
+      const outputDisp = document.getElementById('output-display');
+
+      targetDisp.innerText = 'POST /auth/login';
+      statusDisp.innerText = 'Sending payload...';
+      outputDisp.innerText = 'Authenticating...';
+
+      const t0 = performance.now();
       try {
         const res = await fetch('/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'customer@brewlite.vn', password: 'password123' })
+          body: JSON.stringify({
+            email: 'customer@brewlite.vn',
+            password: 'password123'
+          })
         });
+        const t1 = performance.now();
+        const duration = Math.round(t1 - t0);
         const data = await res.json();
-        document.getElementById('console-status').innerText = 'HTTP ' + res.status + ' OK';
-        document.getElementById('console-output').innerText = JSON.stringify(data, null, 2);
+
+        statusDisp.innerText = 'HTTP ' + res.status + ' OK (' + duration + 'ms)';
+        outputDisp.innerText = JSON.stringify(data, null, 2);
       } catch (err) {
-        document.getElementById('console-status').innerText = 'Lỗi kết nối';
-        document.getElementById('console-output').innerText = err.toString();
+        statusDisp.innerText = 'Error';
+        outputDisp.innerText = err.toString();
       }
     }
 
-    // Auto-run health test on load
-    window.addEventListener('DOMContentLoaded', () => runTest('/health'));
+    // Tự động chạy test /health khi trang load xong
+    window.addEventListener('DOMContentLoaded', () => {
+      executeApi('/health');
+    });
   </script>
 </body>
 </html>`;
   }
 }
-
