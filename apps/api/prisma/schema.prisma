@@ -1,0 +1,89 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  MANAGER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PREPARING
+  COMPLETED
+  PAYMENT_FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  orders       Order[]
+}
+
+model Product {
+  id                String      @id
+  name              String
+  description       String
+  basePrice         Int
+  imageUrl          String
+  category          String
+  availableSizes    Json
+  availableToppings Json
+  stock             Int
+  isAvailable       Boolean     @default(true)
+  orderItems        OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  status      OrderStatus @default(PENDING)
+  totalAmount Int
+  createdAt   DateTime    @default(now())
+  items       OrderItem[]
+  payments    Payment[]
+}
+
+model OrderItem {
+  id               String  @id @default(uuid())
+  orderId          String
+  order            Order   @relation(fields: [orderId], references: [id])
+  productId        String
+  product          Product @relation(fields: [productId], references: [id])
+  quantity         Int
+  selectedSize     String
+  selectedToppings Json
+  unitPrice        Int
+  totalPrice       Int
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  orderId        String
+  order          Order         @relation(fields: [orderId], references: [id])
+  idempotencyKey String        @unique
+  amount         Int
+  method         String
+  status         PaymentStatus
+  externalTxId   String?
+  createdAt      DateTime      @default(now())
+}

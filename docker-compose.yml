@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: brewlite-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-brewlite_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brewlite_secret_password}
+      POSTGRES_DB: ${POSTGRES_DB:-brewlite_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - local-pgdata:/var/lib/postgresql/data
+      - ./apps/api/prisma/migration.sql:/docker-entrypoint-initdb.d/01-migration.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-brewlite_user} -d ${POSTGRES_DB:-brewlite_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: brewlite-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-brewlite_user}:${POSTGRES_PASSWORD:-brewlite_secret_password}@db:5432/${POSTGRES_DB:-brewlite_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-brewlite_dev_secret_key}
+      PAYMENT_SIMULATION_MODE: ${PAYMENT_SIMULATION_MODE:-SUCCESS}
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    container_name: brewlite-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+
+volumes:
+  local-pgdata:
