@@ -1,0 +1,57 @@
+name: CI Pipeline (Sprint 1 & 2 Quality Gate)
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  ci-quality-gate:
+    name: Install -> Lint -> Unit Test -> Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --- KIỂM TRA BACKEND (apps/api) ---
+      - name: 3. [API] Install Dependencies
+        working-directory: apps/api
+        run: npm install
+
+      - name: 4. [API] Run Lint
+        working-directory: apps/api
+        run: npm run lint
+
+      - name: 5. [API] Run Unit Tests
+        working-directory: apps/api
+        run: npm test
+
+      - name: 6. [API] Build Application
+        working-directory: apps/api
+        run: npm run build
+
+      # --- KIỂM TRA FRONTEND (apps/web) ---
+      - name: 7. [WEB] Install Dependencies
+        working-directory: apps/web
+        run: npm install
+
+      - name: 8. [WEB] Run Lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: 9. [WEB] Run Unit Tests
+        working-directory: apps/web
+        run: npm test
+
+      - name: 10. [WEB] Build Next.js Application
+        working-directory: apps/web
+        run: npm run build
