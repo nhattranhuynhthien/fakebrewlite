@@ -1,0 +1,15 @@
+{
+  "name": "brewlite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BrewLite – Requirements to Deployment (Assignment 2)",
+  "scripts": {
+    "test": "npm --prefix apps/api test && npm --prefix apps/web test",
+    "test:api": "npm --prefix apps/api test",
+    "test:web": "npm --prefix apps/web test",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "lint": "npm --prefix apps/api run lint && npm --prefix apps/web run lint"
+  }
+}
